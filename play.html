@@ -1,0 +1,195 @@
+<html>
+	<link href="video-js/video-js.css" rel="stylesheet">
+	<link rel="stylesheet" href="jquery.mobile-1.4.5.min.css">
+	<script src="jquery-1.11.0.min.js"></script>
+    <script src="jquery-migrate-1.2.1.min.js"></script>
+    <script src="jquery.mobile-1.4.5.min.js"></script>
+	<script src="video-js/video.js"></script>
+	<script src="velocity.min.js"></script>
+	<script src="https://leancloud.cn/scripts/lib/av-0.4.6.min.js"></script>
+	<script type="text/javascript">
+		AV.initialize("x4fndt0jojdk7huax4wa8p7qtc6tq7w1ls07zl09tudzcuam", "agp94cka9wmg9q869ro5hcxf3a7nmrk8uqnxvnlfnmh3qbeg");
+	</script>
+	<style>
+      #square {
+        width: 640px;
+        height: 320px;
+        z-index: 2147483647;
+        position: absolute;
+      }
+      #example_video_1 {
+    	z-index: 0;
+    	position: absolute;
+	  }
+	  #timeLabel {
+	  	top:0px;
+	  	left: 0px;
+	  	position: absolute;
+	  }
+	  #textToAdd {
+	  	top:0px;
+	  	width: 480px;
+	  	position: absolute;
+	  }
+	  #addLabelButton {
+	  	top: 0px;
+	  	left: 500px;
+    	z-index: 3;
+    	position: absolute;
+	  }
+	  #inputBox {
+	  	width: 640px;
+        height: 320px;
+	  	top: 340px;
+	  	left: 10px;
+    	z-index: 3;
+    	position: absolute;
+	  }
+	  #statusBox {
+	  	width: 300px;
+        height: 320px;
+	  	top: 0px;
+	  	left: 650px;
+    	z-index: 3;
+    	position: absolute;
+	  }
+	  
+    </style>
+	<body>
+		<div id="square">
+			<video id="example_video_1" class="video-js vjs-default-skin vjs-big-play-centered"
+	  				controls preload="auto" width="640" height="320"
+	  				data-setup='{"example_option":true}'>
+		 			<source src="oceans.mp4" type='video/mp4' />
+		 			<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
+			</video>
+			
+		</div>
+		<div id="inputBox">
+			<label for="textinput-2">Text Input:</label>
+			<input type="text" name="textinput-2" id="textToAdd" placeholder="输入标签内容" value="">
+			<button id="addLabelButton">add</button>
+		</div>
+		<div id="statusBox">
+			<div id="timeLabel">currentTime:0</div>
+		</div>
+		
+
+		<script type="text/javascript">
+
+			var labelIndex = 0;
+			var labelStartX = 640;
+			var labelStartY = 290;
+			var generateLabelTimer;
+			var floatDuration = 5000;
+			var labels = [];
+
+			$( "#addLabelButton" ).bind( "click", function() {
+				var FloatLabel = AV.Object.extend("FloatLabel");
+				var query = new AV.Query(FloatLabel);
+
+				query.find({
+				  success: function(results) {
+				    for (var i = 0; i < results.length; i++) {
+				      var object = results[i];
+				      leanToObj(object);
+				      object.destroy({
+						  success: function(myObject) {
+						  	alert("destroy");
+						  },
+						  error: function(myObject, error) {
+						  		alert(error);    
+						  }
+						});
+				    }
+				  },
+				  error: function(error) {
+				  }
+				});
+			});
+			function leanToObj(leanObject){
+				var labelId = leanObject.id;
+				var labelText = leanObject.get("text");
+				
+				var newLabel = {
+					"id":labelId,
+					"text":labelText,
+					"avaliable":true
+				};
+				labels.push(newLabel);
+			}	
+			function addLabel(labelObj){
+				if (labelObj == null) return;
+				var labelId = labelObj['id'];
+				var labelText = labelObj['text'];
+				labelObj.avaliable = false;
+				var label = $("<div>",{
+	        		id:labelId,
+	        		text:labelText
+		      	});
+		      	var topTo = Math.floor((Math.random() * labelStartY) + 1);
+		      	label.css({
+		      		color:'white',
+		      		width:'200px',
+		      		top:topTo +'px',
+		      		left:labelStartX + 'px',
+		      		position:'absolute',
+		      		"z-index":'2147483647',
+		      		opacity:"0.6"
+		      	})
+			  	$("#square").append(label);
+			  	label.velocity(
+					  { 
+					    left: 0
+					  },{ 
+					    duration: floatDuration,
+					    easing: "linear",
+					    complete: function(element) { 
+					    	resetLabelById($(element).attr('id'));
+       						$(element).remove();
+    					}
+					  }
+				);
+			}
+			function resetLabelById(labelId){
+				for (var i = labels.length - 1; i >= 0; i--) {
+					var label = labels[i];
+					if (label.id == labelId) {
+						label.avaliable = true;
+					};
+				};
+			}
+			function getAvaliableLabels(){
+				var arr = [];
+				for (var i = labels.length - 1; i >= 0; i--) {
+					var label = labels[i];
+					if (label.avaliable) {
+						return label;
+					};
+				};
+				return null;
+			}
+			var mPlayer = videojs('example_video_1');
+			mPlayer.on('firstplay',function(){
+				generateLabelTimer = setInterval(function() 
+		        {
+		        	var avaliableLabel = getAvaliableLabels();
+		        	addLabel(avaliableLabel);
+		        },1000);
+			});
+			mPlayer.on('fullscreenchange',function(){
+				var theVideo = $("#example_video_1");
+				labelStartX = theVideo.width();
+				labelStartY = theVideo.height() - 30;
+				if (mPlayer.isFullscreen()) {
+					floatDuration = 10000;	
+				}else
+				{
+					floatDuration = 5000;	
+				}
+			});
+
+			
+		</script>
+	</body>
+</html>

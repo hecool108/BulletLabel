@@ -1,0 +1,22 @@
+https://leancloud.cn/
+http://www.videojs.com/
+https://github.com/visionmedia/move.js
+http://getbootstrap.com/getting-started/#download
+https://github.com/julianshapiro/velocity
+
+python -m SimpleHTTPServer
+
+完整程序分成两个模块
+编辑录入模块A：
+弹幕信息录入页面包括视频播放器
+输入框输入弹幕内容：发送后会马上出现在视频对应的时间点上。
+所有已经输入的弹幕被提交到后台，包括内容，出现时间点，是否可用。
+该界面还可以看到目前有的所有弹幕，可以选中标记是否可用，或者删除。
+
+视频播放模块B：
+支持基本的进度，声音，暂停继续播放功能。
+会一直加载播放时间在当前时间区间内的弹幕，并显示出来。
+视频存放在本机http server所以速度没有问题。 
+
+演示时只需要将模块B拷贝到任何一台装有http server的电脑上，解压缩访问即可。
+模块A可以部署到任意外网server,通过浏览器访问操作。

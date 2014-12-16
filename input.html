@@ -1,0 +1,194 @@
+<html>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link href="video-js/video-js.css" rel="stylesheet">
+	<script src="jquery-1.11.0.min.js"></script>
+    <script src="jquery-migrate-1.2.1.min.js"></script>
+	<script src="video-js/video.js"></script>
+	<link rel="stylesheet" href="jquery.mobile-1.4.5.min.css">
+	<script src="jquery.mobile-1.4.5.min.js"></script>
+	<script src="https://leancloud.cn/scripts/lib/av-0.4.6.min.js"></script>
+	<script type="text/javascript">
+		AV.initialize("x4fndt0jojdk7huax4wa8p7qtc6tq7w1ls07zl09tudzcuam", "agp94cka9wmg9q869ro5hcxf3a7nmrk8uqnxvnlfnmh3qbeg");
+	</script>
+	<style>
+	   #mainBox {
+	  	width: 640px;
+        height: 320px;
+	  	top:0%;
+     	left:50%;
+     	margin:0px 0 0 -320px;
+    	z-index: 3;
+    	position: absolute;
+	  }
+	  #leftBox{
+	  	width: 190px;
+        height: 320px;
+	  	top: 120px;
+	  	left:5px;
+    	z-index: 3;
+    	position: absolute;
+	  }
+	  #rightBox{
+	  	width: 430px;
+        height: 320px;
+	  	top: 120px;
+	  	left: 210px;
+    	z-index: 3;
+    	position: absolute;
+	  }
+	  #listView{
+	  	height: 200px
+	  }
+	  #demoLabel{
+	  	color: #ffffff;
+	  	top: 3px;
+	  	right: 10px;
+	  	text-shadow: 0px 0px #FF0000;
+	  	position: absolute;
+	  }
+	  #demoBackgrund{
+	  	width: 640px;
+	  	height: 56px;
+	  	left: 0px;
+	  	position: absolute;
+	  	background-color: #000000;	
+	  }
+    </style>
+	<body>
+		<div id ="mainBox">
+			<input type="text" data-clear-btn="true" 
+					id="textinput" placeholder="输入标签内容" value="">
+			<div id="demoBackgrund">
+				<div id="demoLabel">输入标签内容</div>
+			</div>
+			
+			<div id="leftBox">
+				
+					<label for="fontColorSelector">字体颜色:</label>
+					<input type="color" data-clear-btn="false"
+							id="fontColorSelector" value="#ffffff"/>	
+					<label for="fontColorSelector">字体大小:</label>
+					<input type="range" id="fontSizeSelector" 
+						min="15" max="50" value="16"/>
+					<label for="fontAlphaSelector">字体透明度:</label>
+					<input type="range" id="fontAlphaSelector" 
+						min="0" max="100" value="100"/>
+			</div>
+			<div id="rightBox">
+					<button id="addLabelButton">add</button>
+					<!-- data-filter="true" 
+					data-dividertheme="b"
+						data-filter-placeholder="查找..." -->
+
+	<!-- 				<ul id="listView" 
+						data-theme="b" 
+						
+						data-role="listview" 
+						data-inset="true"></ul> -->
+					
+					<ul id="listView" data-role="listview" class="ui-listview">
+						
+					</ul>
+					
+			</div>
+		</div>
+		<script type="text/javascript">
+			var labels = [];
+			$(window).load(function(){
+				$("#fontSizeSelector").on("change", function(e){
+					var newFontSize = $("#fontSizeSelector").attr('value');
+   					$('#demoLabel').css('font-size',newFontSize);
+				});
+				$("#fontAlphaSelector").on("change", function(e){
+					var newAlpha = $("#fontAlphaSelector").attr('value');
+					newAlpha /= 100.0;
+   					$('#demoLabel').css('opacity',newAlpha);
+				});
+				$("#textinput").keyup(function(event) {
+					$('#demoLabel').text($("#textinput").attr('value'));
+				});
+				$('#fontColorSelector').change(function() {
+					$('#demoLabel').css('color',$('#fontColorSelector').attr('value'));
+				});
+				$('#listView').on('click', 'li', function(element) {
+						var r = confirm("删除这条弹幕？");
+						if(r == true) {
+						  var labelId = $(this).attr('id');
+						  for (var i = labels.length - 1; i >= 0; i--) {
+						    	var labelObject = labels[i];
+						    	if (labelObject.id == labelId) {
+						    		labelObject.destroy({
+									  success: function(myObject) {
+									  	$("#"+labelId).remove();
+									  	$('#listView').listview('refresh');
+									  },
+									  error: function(myObject, error) {
+									  	alert(error);    
+									  }
+									});
+						    	}
+						    };  
+						}
+        				
+    			});
+				$( "#addLabelButton" ).bind( "click", function() {	
+					var labelText = $('#textinput').attr('value');
+					var labelColor = $('#fontColorSelector').attr('value');
+					var labelSize = $("#fontSizeSelector").attr('value');
+					var labelAlpha = $("#fontAlphaSelector").attr('value')/100.0;
+					
+					var FloatLabel = AV.Object.extend("FloatLabel");
+					var label = new FloatLabel();
+						label.set('text', labelText);
+						label.set('color', labelColor);
+						label.set('size', labelSize);
+						label.set('alpha', labelAlpha);
+						label.set('available', true);
+						label.save(null, {
+				  				success: function(label) {
+				  					addLabelToList(label);
+				  				},
+				  				error: function(label, error) {
+				    				alert('Failed to create new object, with error code: ' + error.description);
+				  				}
+						});
+
+
+				});
+				function addLabelToList(label){
+					labels.push(label);
+
+// <li><a href="#" class="ui-btn ui-btn-icon-right ui-icon-delete">Audi</a></li>
+					$('#listView').append($('<li/>', {
+						'id':label.id,
+					}).append($('<a/>', {    //here appending `<a>` into `<li>`
+					    'href': '#',
+					    'class': 'ui-btn ui-btn-icon-right ui-icon-delete',
+					    'text': label.get('text')
+					}))).listview('refresh');
+
+				    // $('#listView').append($('<li/>', { 
+								// 	    'id':label.id,
+								// 	    'text':label.get('text'),
+								// 	})).listview('refresh');
+				}
+				function loadLabels(){
+					var FloatLabel = AV.Object.extend("FloatLabel");
+					var query = new AV.Query(FloatLabel);
+
+					query.find({
+					  success: function(results) {
+					    for (var i = 0; i < results.length; i++) {
+					      var object = results[i];	
+					      addLabelToList(object);				    
+					    }
+					  },
+					  error: function(error) {
+					  }
+					});
+				}
+				loadLabels();
+			});
+		</script>
+	</body>
+</html>
